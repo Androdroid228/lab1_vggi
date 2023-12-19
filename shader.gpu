@@ -1,0 +1,111 @@
+
+
+// Vertex shader
+const vertexShaderSource = `
+attribute vec3 vertex;
+attribute vec3 normal;
+attribute vec2 texture;
+uniform mat4 ModelViewProjectionMatrix,
+NormalMatrix;
+
+uniform float u_limit;
+uniform float u_smoothValue;
+uniform vec3 u_lightDirection;
+uniform vec3 u_lightPosition;
+uniform vec2 u_translate;
+uniform float u_scale;
+
+varying vec2 v_texture;
+varying vec3 v_color;
+uniform vec4 color;
+
+mat4 translation(float tx, float ty, float tz) {
+    mat4 dst;
+
+    dst[0][0] = 1.0;
+    dst[0][ 1] = 0.0;
+    dst[0][ 2] = 0.0;
+    dst[0][ 3] = 0.0;
+    dst[1][ 0] = 0.0;
+    dst[1][ 1] = 1.0;
+    dst[1][ 2] = 0.0;
+    dst[1][ 3] = 0.0;
+    dst[2][ 0] = 0.0;
+    dst[2][ 1] = 0.0;
+    dst[2][ 2] = 1.0;
+    dst[2][ 3] = 0.0;
+    dst[3][ 0] = tx;
+    dst[3][ 1] = ty;
+    dst[3][ 2] = tz;
+    dst[3][ 3] = 1.0;
+
+    return dst;
+}
+
+mat4 scaling(float s){
+    mat4 dst;
+
+    dst[0][0] = s;
+    dst[0][ 1] = 0.0;
+    dst[0][ 2] = 0.0;
+    dst[0][ 3] = 0.0;
+    dst[1][ 0] = 0.0;
+    dst[1][ 1] = s;
+    dst[1][ 2] = 0.0;
+    dst[1][ 3] = 0.0;
+    dst[2][ 0] = 0.0;
+    dst[2][ 1] = 0.0;
+    dst[2][ 2] = s;
+    dst[2][ 3] = 0.0;
+    dst[3][ 0] = 0.0;
+    dst[3][ 1] = 0.0;
+    dst[3][ 2] = 0.0;
+    dst[3][ 3] = 1.0;
+
+    return dst;
+}
+
+
+void main() {
+    vec4 r1 = translation(-u_translate.x,-u_translate.y,0.0)*vec4(texture,0.,1.);
+    vec4 r2 = scaling(u_scale)*r1;
+    vec4 r3 = translation(u_translate.x,u_translate.y,0.0)*r2;
+    v_texture = r3.xy;
+    vec3 norm = normalize(mat3(NormalMatrix)*normal);
+    vec3 vert = mat3(ModelViewProjectionMatrix)*vertex;
+    vec3 toLight = u_lightPosition-vert;
+    vec3 toView = -vert;
+    vec3 halfVector = normalize(toLight+toView);
+    float dotFromDirection = dot(toLight,normalize(-u_lightDirection));
+    float inLight = smoothstep(u_limit,u_limit+u_smoothValue,dotFromDirection);
+    float light = inLight * dot(norm, toLight);
+    float specular = inLight * pow(dot(norm, halfVector),10.0);
+    v_color = vec3(color);
+    v_color *= light;
+    v_color += specular;
+    gl_Position = ModelViewProjectionMatrix * vec4(vertex,1.0);
+}`;
+
+
+// Fragment shader
+const fragmentShaderSource = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+   precision highp float;
+#else
+   precision mediump float;
+#endif
+
+uniform vec4 color;
+varying vec3 v_color;
+uniform float u_smoothValue;
+uniform sampler2D u_tmu;
+varying vec2 v_texture;
+void main() {
+    //gl_FragColor = color;
+    gl_FragColor = vec4(v_color,1.0);
+    vec4 texColor = texture2D(u_tmu, v_texture);
+    gl_FragColor = texColor;
+    if(u_smoothValue>500.0){
+        gl_FragColor = vec4(1.0);
+    }
+}`;

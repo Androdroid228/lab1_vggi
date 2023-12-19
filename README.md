@@ -1,1 +1,5 @@
-# Код знаходиться у папці PA2. Для перегляду демонстрації роботи відкрийте файл lab2.gif.
+# WebGL
+
+Project that accompanies VGGI credit module.
+
+Visit vggi-kpi.blogspot.com for more information
