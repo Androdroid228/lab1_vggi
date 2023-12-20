@@ -1,5 +1,1 @@
-# WebGL
-
-Project that accompanies VGGI credit module.
-
-Visit vggi-kpi.blogspot.com for more information
+# Для перегляду опису і демонстрації роботи відкрийте файл "Вареніков_Андрій_ТР-31мп_Звіт_до_РГР".
